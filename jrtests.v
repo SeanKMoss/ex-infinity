@@ -10,7 +10,7 @@ Example ex_coface_2 : (sd_coface 4 3 3).
 Proof. unfold sd_coface. omega. Qed.
 
 Example ex_coface_3 : ~ (sd_coface 3 2 1).
-Proof. intro H. unfold sd_coface in H. omega. Qed.
+Proof. unfold sd_coface. omega. Qed.
 
 (* Codegeneracy maps *)
 Example ex_codegen_1 : (sd_codegen 1 0 0).
@@ -23,7 +23,7 @@ Example ex_codegen_3 : (sd_codegen 100 100 100).
 Proof. unfold sd_codegen. omega. Qed.
 
 Example ex_codegen_4 : ~(sd_codegen 40 40 41).
-Proof. intro H. unfold sd_codegen in H. omega. Qed.
+Proof. unfold sd_codegen. omega. Qed.
 
 (* jk maps *)
 Example ex_jk_1 : forall i j k, (i <= k) ->

@@ -18,11 +18,10 @@ Qed.
 Theorem exinf_eq_2 : forall i k,
                      forall a b,
                        i <= S k ->
-                       (comp (jk (S k)) (comp (rk (S k)) (sd_coface i)) a b <->
-                        comp (comp (jk (S k)) (comp (rk (S k)) (sd_coface i))) (jk k) a b).
+                       comp (comp (jk (S k)) (comp (rk (S k)) (sd_coface i))) (jk k) a b <->
+                       comp (jk (S k)) (comp (rk (S k)) (sd_coface i)) a b.
 Proof.
   intros i k a b H. split; intro K.
-  Case "->". exists a. split. unfold jk. omega. apply K.
   Case "<-". assert (K1 := K). destruct K as [x K]. assert (K2 := K).
   destruct K as [K L]. destruct L as [y L].
     destruct L as [L M]. destruct L as [z L]. destruct L as [L1 L2].
@@ -39,13 +38,14 @@ Proof.
       unfold rk. omega. unfold jk. right. split. apply l.
       unfold jk in K. unfold sd_coface in L1. unfold rk in L2. unfold jk in M.
       clear K1. clear K2. omega.
+  Case "->". exists a. split. unfold jk. omega. apply K.
 Qed.
 
 Theorem exinf_eq_3 : forall i k,
                      forall a b,
-                       (S (S k)) <= i ->
-                       (comp (rk k) (sd_coface (S i)) a b <->
-                        comp (sd_coface i) (rk k) a b).
+                       (S (S k)) <= (S i) ->
+                       comp (rk k) (sd_coface (S i)) a b <->
+                       comp (sd_coface i) (rk k) a b.
 Proof.
   intros i k a b H. split; intro K; destruct K as [x K]; destruct K as [K L].
   Case "->". destruct (lt_eq_lt_dec a (S k)); try destruct s.
@@ -66,13 +66,46 @@ Proof.
       unfold sd_coface in L. omega.
 Qed.
 
-Theorem exinf_eq_4 : forall i k,
+Theorem exinf_eq_4 : forall h k,
                      forall a b,
-                       comp (jk k) (sd_coface i) a b <->
-                       comp (comp (jk k) (sd_coface i)) (jk k) a b.
+                       h <= k ->
+                       comp (rk k) (jk h) a b <->
+                       comp (jk h) (rk k) a b.
+Proof.
+  intros h k a b J. split; intro H; assert (I:=H); destruct H as [x [H K]].
+  Case "->". destruct (lt_eq_lt_dec a (S k)). destruct s.
+    SCase "a <= k". exists a. split. unfold rk. omega. unfold jk.
+      unfold jk in H. unfold rk in K. omega.
+    SCase "a = k+1". exists b. split. unfold rk. unfold jk in H. unfold rk in K. omega.
+      unfold jk. omega.
+    SCase "a > k+1". destruct a as [| a']. omega. exists a'. split.
+      unfold rk. omega. unfold jk. unfold jk in H. unfold rk in K. omega.
+  Case "<-". destruct (le_lt_dec a h).
+    SCase "a <= h". exists a. split. unfold jk. omega. unfold rk.
+      unfold rk in H. unfold jk in K. omega.
+    SCase "a > h". destruct (lt_eq_lt_dec a (S k)). destruct s.
+      SSCase "h < a <= k". exists b. split. unfold rk in H. unfold jk in K.
+        unfold jk. omega.
+        unfold rk. unfold rk in H. unfold jk in K. omega.
+      SSCase "h < a = k+1". subst. assert(e:x<=k) by (unfold rk in H; omega).
+        subst. assert(e1:b<=x) by (unfold jk in K; omega). exists b.
+        split. unfold jk. unfold jk in K. unfold rk in H. omega.
+        unfold rk. omega.
+      SSCase "k+1 < a". assert (e:S x = a) by (unfold rk in H; omega). subst.
+        destruct (le_lt_dec b k).
+        SSSCase "b <= k". exists b. split. unfold jk. omega.
+          unfold rk. omega.
+        SSSCase "b > k". exists (S b). split. unfold jk. unfold jk in K.
+          unfold rk in H. omega.
+          unfold rk. omega.
+Qed.
+
+Theorem exinf_eq_5 : forall i k,
+                     forall a b,
+                       comp (comp (jk k) (sd_coface i)) (jk k) a b <->
+                       comp (jk k) (sd_coface i) a b.
 Proof.
   intros i k a b. split; intro H.
-  Case "->". exists a. split. unfold jk. omega. apply H.
   Case "<-". destruct H as [x H]. destruct H as [H K]. destruct K as [y K].
     destruct K as [K L]. destruct (le_lt_dec i a).
     SCase "i <= a". exists (S a). split. unfold sd_coface. omega.
@@ -81,13 +114,14 @@ Proof.
     SCase "i > a". exists a. split. unfold sd_coface. omega.
       unfold jk. unfold jk in H. unfold sd_coface in K. unfold jk in L.
       omega.
+  Case "->". exists a. split. unfold jk. omega. apply H.
 Qed.
 
-Theorem exinf_eq_5 : forall h k,
+Theorem exinf_eq_6 : forall h k,
                       forall a b,
                         h < k ->
-                        (comp (jk h) (rk k) a b <->
-                         comp (jk h) (sd_codegen k) a b).
+                        comp (jk h) (rk k) a b <->
+                        comp (jk h) (sd_codegen k) a b.
 Proof.
   intros h k a b J. split; intro H.
   Case "->". destruct H as [x [H K]]. destruct (le_lt_dec a k).
@@ -105,46 +139,6 @@ Proof.
     SCase "a > k+1". destruct a as [| a']. omega. exists a'. split.
       unfold rk. omega.
       unfold jk. unfold jk in K. unfold sd_codegen in H. omega.
-Qed.
-
-Theorem exinf_eq_6 : forall h k,
-                     forall a b,
-                       h < k ->
-                       (comp (comp (jk h) (rk h)) (rk k) a b <->
-                        comp (comp (jk h) (rk h)) (sd_codegen k) a b).
-Proof.
-  intros h k a b J. split; intro H; assert (I:=H);
-                    destruct H as [x [H [y [K L]]]].
-  Case "->". destruct (le_lt_dec a k).
-    SCase "a <= k". exists a. split. unfold sd_codegen. omega.
-      assert (e: a = x) by (unfold rk in H; omega). subst.
-      exists y. split. apply K. apply L.
-    SCase "a > k". destruct a as [| a']. omega. exists a'. split.
-      unfold sd_codegen. omega.
-      destruct (lt_eq_lt_dec a' (S h)). destruct s.
-      SSCase "a' <= h". omega.
-      SSCase "a' = h+1". exists y. split. unfold rk. unfold jk in L.
-        unfold rk in K. unfold rk in H. omega.
-        apply L.
-      SSCase "a' > h+1". destruct a' as [| a'']. omega. exists a''.
-        split. unfold rk. omega.
-        unfold jk. unfold jk in L. unfold rk in K. unfold rk in H. omega.
-  Case "<-". destruct (lt_eq_lt_dec a (S k)). destruct s.
-    SCase "a <= k". exists a. split. unfold rk. omega.
-      assert (e: a = x) by (unfold sd_codegen in H; omega). subst.
-      exists y. split. apply K. apply L.
-    SCase "a = k+1". exists x. split. unfold rk. unfold sd_codegen in H. omega.
-      exists y. split. apply K. apply L.
-    SCase "a > k+1". destruct a as [| a']. omega. exists a'. split.
-      unfold rk. omega. destruct (lt_eq_lt_dec a' (S h)). destruct s.
-      SSCase "a' <= h". exists a'. split. unfold rk. omega.
-        unfold jk. unfold sd_codegen in H. unfold rk in K. unfold jk in L. omega.
-      SSCase "a' = h+1". exists y. split. unfold rk. unfold sd_codegen in H.
-        unfold rk in K. unfold jk in L. omega.
-        apply L.
-      SSCase "a' > h+1". destruct a' as [| a'']. omega. exists a''. split.
-        unfold rk. omega.
-        unfold jk. unfold sd_codegen in H. unfold rk in K. unfold jk in L. omega.
 Qed.
 
 Theorem exinf_eq_7 : forall k,
@@ -190,42 +184,8 @@ Qed.
 Theorem exinf_eq_8 : forall h k,
                      forall a b,
                        h <= k ->
-                       (comp (rk k) (jk h) a b <->
-                        comp (jk h) (rk k) a b).
-Proof.
-  intros h k a b J. split; intro H; assert (I:=H); destruct H as [x [H K]].
-  Case "->". destruct (lt_eq_lt_dec a (S k)). destruct s.
-    SCase "a <= k". exists a. split. unfold rk. omega. unfold jk.
-      unfold jk in H. unfold rk in K. omega.
-    SCase "a = k+1". exists b. split. unfold rk. unfold jk in H. unfold rk in K. omega.
-      unfold jk. omega.
-    SCase "a > k+1". destruct a as [| a']. omega. exists a'. split.
-      unfold rk. omega. unfold jk. unfold jk in H. unfold rk in K. omega.
-  Case "<-". destruct (le_lt_dec a h).
-    SCase "a <= h". exists a. split. unfold jk. omega. unfold rk.
-      unfold rk in H. unfold jk in K. omega.
-    SCase "a > h". destruct (lt_eq_lt_dec a (S k)). destruct s.
-      SSCase "h < a <= k". exists b. split. unfold rk in H. unfold jk in K.
-        unfold jk. omega.
-        unfold rk. unfold rk in H. unfold jk in K. omega.
-      SSCase "h < a = k+1". subst. assert(e:x<=k) by (unfold rk in H; omega).
-        subst. assert(e1:b<=x) by (unfold jk in K; omega). exists b.
-        split. unfold jk. unfold jk in K. unfold rk in H. omega.
-        unfold rk. omega.
-      SSCase "k+1 < a". assert (e:S x = a) by (unfold rk in H; omega). subst.
-        destruct (le_lt_dec b k).
-        SSSCase "b <= k". exists b. split. unfold jk. omega.
-          unfold rk. omega.
-        SSSCase "b > k". exists (S b). split. unfold jk. unfold jk in K.
-          unfold rk in H. omega.
-          unfold rk. omega.
-Qed.
-      
-Theorem exinf_eq_9 : forall h k,
-                     forall a b,
-                       h <= k ->
-                       (comp (comp(sd_codegen h) (jk (S k))) (rk (S k)) a b <->
-                        comp (comp (jk k) (rk k)) (sd_codegen h) a b).
+                       comp (comp(sd_codegen h) (jk (S k))) (rk (S k)) a b <->
+                       comp (comp (jk k) (rk k)) (sd_codegen h) a b.
 Proof.
   intros h k a b J. split; intro H; assert (I:=H); destruct H as [x [H K]];
                     assert (I1:=K); destruct K as [y [K L]];
@@ -254,11 +214,11 @@ Proof.
       SSCase "b > h". exists (S b). split. unfold jk. omega. unfold sd_codegen. omega.
 Qed.
 
-Theorem exinf_eq_10 : forall h k,
+Theorem exinf_eq_9 : forall h k,
                       forall a b,
                         k <= h ->
-                        (comp (comp (sd_codegen h) (jk k)) (rk k) a b <->
-                         comp (comp (jk k) (rk k)) (sd_codegen (S h)) a b).
+                        comp (comp (sd_codegen h) (jk k)) (rk k) a b <->
+                        comp (comp (jk k) (rk k)) (sd_codegen (S h)) a b.
 Proof.
   intros h k a b J. split; intro H; assert (I:=H); destruct H as [x [H K]];
                     assert (I1:=K); destruct K as [y [K L]];
